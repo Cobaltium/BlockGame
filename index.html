@@ -18,7 +18,7 @@
     c.width = window.innerWidth;
   });
   var sessionid;
-  var socket = io.connect('http://pleblvl.com:3000');
+  var socket = io.connect('http://localhost:3000');
   socket.on('sessid', function(id){
     sessionid = id;
 
