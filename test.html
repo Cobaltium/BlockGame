@@ -1,0 +1,244 @@
+<html>
+  <head>
+    <!--<script src="/socket.io/socket.io.js"></script>-->
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script>
+  var gameLoopID;
+  var latestPlayers = [];
+  var players = [];
+  var player = new player(1, 35, 35);
+  var loopNum
+
+
+  function player(id, x, y){
+    this.id = id;
+    this.x = x;
+    this.y = y;
+  }
+  $(window).resize(function() {
+    c.height = window.innerHeight -50;
+    c.width = window.innerWidth - 50;
+  });
+  $(document).ready(function() {
+    c = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    c.height = window.innerHeight -50;
+    c.width = window.innerWidth -50;
+    player.x = 35;
+    player.y = 35;
+    gameLoop();
+  });
+  $(document).keydown(function(e) {
+    var whichKey;
+
+    switch(e.which){
+          case 37:
+
+          player.moveDir = "left";
+          //player.x += -5;
+          velocityX = -1.5;
+          break;
+          case 16:
+
+          velocityX = 5;
+          break;
+          case 32:
+          player.moveDir = "up";
+          //player.y += -5;
+          StartJump();
+          break;
+
+          case 39:
+          player.moveDir = "right";
+          //player.x += 5;
+          velocityX = 1.5;
+          break;
+
+          //case 40:
+          //player.moveDir = "down";
+          //player.y += 5;
+          //break;
+
+          default: return;
+  }
+
+  e.preventDefault();
+      });
+      $(document).keyup(function(e){
+        switch(e.which){
+        case 32:
+          EndJump();
+        break;
+      case 37:
+        velocityX = 0;
+        break;
+    case 39:
+      velocityX = 0;
+      break;
+      case 16:
+      velocityX = 0;
+      break;
+    default: return;
+      }
+      });
+      var velY = 0;
+      var velX = 0;
+      function animatePlayer(){
+      var speed = 2,
+      friction = 0.97,
+      y = player.y,
+      x = player.x;
+        if(player.moveDir == "left"){
+          if(velX > -speed){
+            velX--;
+          }
+        } else if (player.moveDir == "right"){
+          if(velX < speed){
+            velX++;
+          }
+        }else if (player.moveDir == "down"){
+          if(velY < speed){
+            velY++;
+          }
+        }else if (player.moveDir == "up"){
+          //if(velY > -speed){
+          //  velY--;
+          //}
+          animateJump();
+        }
+          velY *= friction;
+          y += velY;
+          velX *= friction;
+          x += velX;
+          if(velX < 0.25 && velX > 0){
+            velX = 0;
+          }
+          if(velX > -0.25 && velX < 0){
+            velX = 0;
+          }
+          if(velY < 0.25 && velY > 0){
+            velY = 0;
+          }
+          if(velY > -0.25 && velY < 0){
+            velY = 0;
+          }
+          //renderPlayers();
+          player.x = x;
+          player.y = y;
+          if(velX != 0 || velY != 0){
+            renderPlayer(x,y);
+        }
+
+        loopNum++;
+        player.moveDir = null;
+      }
+      vy = 0;
+      function animateJump(){
+        jump = true;
+        player.y += vy;
+        vy *= .98;
+        console.log('test');
+        renderPlayer(player.x, player.y);
+        requestAnimationFrame(animateJump);
+    }
+
+
+
+
+
+
+
+
+
+    var positionX = 100.0;
+    var positionY = 175.0;
+    var velocityX = 0.0;
+    var velocityY = 0.0;
+    var gravity = 0.5;
+    var onGround = false;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function StartJump(){
+      if(onGround){
+        velocityY = -12.0;
+        onGround = false;
+      }
+    }
+    function EndJump(){
+      if(velocityY < -6.0){
+        velocityY = -6.0;
+      }
+    }
+
+
+
+
+
+    function Update(){
+          velocityY += gravity;
+          player.y += velocityY;
+          player.x += velocityX;
+
+        if(player.y > 175.0)
+        {
+          player.y = 175.0;
+          velocityY = 0.0;
+          onGround = true;
+        }
+
+        //if(player.x < 10 || player.x > 190)
+        //  velocityX *= -1;
+
+        }
+      function renderPlayer(x, y){
+        c.width = c.width;
+        ctx.fillStyle = "#ff0000";
+        ctx.fillRect(x, y, 35, 35);
+      }
+    function Render(){
+      c.width = c.width;
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(player.x, player.y, 35, 35);
+    }
+  //function animatePlayers(){
+  //  var playerLength = players.length;
+  //  for(int i = 0; i < playerLength; i++){
+  //    animatePlayer(players[i]);
+  //  }
+  //}
+  function gameLoop(){
+    loopNum = 0;
+    Update();
+    Render();
+    gameLoopID = requestAnimationFrame(gameLoop);
+  }
+</script>
+<style type="text/css">
+
+  body {
+    background-color: #dfdfdf;
+  }
+</style>
+  </head>
+  <body>
+    <canvas id="canvas">
+
+    </canvas>
+  </body>
+</html>
