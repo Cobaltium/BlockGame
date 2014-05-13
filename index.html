@@ -1,128 +1,188 @@
 <html>
   <head>
-    <script src="/socket.io/socket.io.js"></script>
+    <!--<script src="/socket.io/socket.io.js"></script>-->
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script>
-
-
+  var gameLoopID;
+  var latestPlayers = [];
+  var players = [];
+  var player = new player(1, 35, 35);
+  var loopNum;
+  var positionX = 100.0;
+  var positionY = 175.0;
+  var velocityX = 0.0;
+  var velocityY = 0.0;
+  var gravity = 0.5;
+  var onGround = false;
+  var incInterval;
+  var LeftKeyDown = false;
+  var RightKeyDown = false;
+  function player(id, x, y){
+    this.id = id;
+    this.x = x;
+    this.y = y;
+  }
   $(window).resize(function() {
-    var c = document.getElementById("canvas");
-    var ctx = c.getContext("2d");
-    c.height = window.innerHeight;
-    c.width = window.innerWidth;
+    c.height = window.innerHeight -50;
+    c.width = window.innerWidth - 50;
   });
   $(document).ready(function() {
-    var c = document.getElementById("canvas");
-    var ctx = c.getContext("2d");
-    c.height = window.innerHeight;
-    c.width = window.innerWidth;
+    c = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    c.height = window.innerHeight -50;
+    c.width = window.innerWidth -50;
+    player.x = 35;
+    player.y = 35;
+    gameLoop();
   });
-  var sessionid;
-  var socket = io.connect('http://localhost:3000');
-  socket.on('sessid', function(id){
-    sessionid = id;
-
-  });
-  socket.on('players', function (data) {
-    console.log(data);
-    socket.emit('move', { move: 'data' });
-  });
-  var players = [];
-  socket.on('updatePlayers', function(data){
-    players = data.data;
-      renderPlayers();
-      console.log(data.player)
-      animatePlayer(data.player);
-    });
-  function renderPlayers(){
-    var c = document.getElementById("canvas");
-    var ctx = c.getContext("2d");
-    ctx.fillStyle = "#000";
-    var length = players.length;
-    c.width = c.width;
-    var currClient;
-    for(var i = 0; i < length; i++){
-      if(sessionid == players[i].id){
-      //currClient = i;
-    } else {
-      ctx.fillRect(players[i].x, players[i].y, 35, 35);
-    }
-    }
-      //ctx.fillStyle = "#ff0000";
-    //ctx.fillRect(players[currClient].x, players[currClient].y, 35, 35);
-    }
-  function animatePlayer(player){
-    var c = document.getElementById("canvas");
-    var ctx = c.getContext("2d");
-    var velY = 0,
-    velX = 0,
-    speed = 2,
-    friction = 0.98,
-    y = player.y,
-    x = player.x;
-    if(player.moveDir == "left"){
-      if(velX > -speed){
-        velX--;
-      }
-    } else if (player.moveDir == "right"){
-      if(velX < speed){
-        velX++;
-      }
-    } else if (player.moveDir == "up"){
-      
-    } else if (player.moveDir == "down"){
-      
-    }
-    velY *= friction;
-    y += velY;
-    velX *= friction;
-    x += velX;
-    c.width = c.width;
-    renderPlayers();
-    ctx.fillStyle = "#ff0000";
-    ctx.fillRect(x, y, 35, 35);
-    setTimeout(animatePlayer(player), 15);
-  }
-  
   $(document).keydown(function(e) {
     var whichKey;
+
     switch(e.which){
           case 37:
-          whichKey = "left";
+
+          player.moveDir = "left";
+          //player.x += -5;
+          velocityX = -3;
+          loopNum = 0;
+          LeftKeyDown = true;
+          //clearInterval(incInterval);
+          //increaseVelocity();
+          break;
+          case 16:
+            if(LeftKeyDown){
+              velocityX = -6;
+            } else if (RightKeyDown){
+              velocityX = 6;
+            }
+          //velocityX = 3;
           break;
 
-          case 38:
-          whichKey = "up";
+          case 32:
+          //player.y += -5;
+          StartJump();
           break;
 
           case 39:
-          whichKey = "right";
+          player.moveDir = "right";
+          //player.x += 5;
+
+          RightKeyDown = true;
+          velocityX = 3;
           break;
 
-          case 40:
-          whichKey = "down";
-          break;
+          //case 40:
+          //player.moveDir = "down";
+          //player.y += 5;
+          //break;
 
           default: return;
   }
-  console.log(whichKey);
-      socket.emit('move', { move: whichKey });
-      
   e.preventDefault();
       });
+      function increaseVelocity(){
+        if(loopNum == 0){
+        incInterval = setInterval(increaseVelocity, 500);
+        }
+        if(loopNum <= 5 && loopNum != -1){
+        loopNum++;
+        velocityX--;
 
-
-  function getCookie(name){
-      var pattern = RegExp(name + "=.[^;]*")
-      matched = document.cookie.match(pattern)
-      if(matched){
-          var cookie = matched[0].split('=')
-          return cookie[1]
+      } else {
+        loopNum = -1;
       }
-      return false
+      if(loopNum == -1){
+        clearInterval(incInterval);
+      }
+      }
+      $(document).keyup(function(e){
+        switch(e.which){
+        case 32:
+          EndJump();
+        break;
+      case 37:
+        velocityX = 0;
+        loopNum = -1;
+        LeftKeyDown = false;
+        //clearInterval(incInterval);
+        velocityX = 0;
+        break;
+    case 39:
+      velocityX = 0;
+      RightKeyDown = false;
+      break;
+      case 16:
+        if(LeftKeyDown){
+          velocityX = -3;
+        } else if (RightKeyDown){
+          velocityX = 3;
+        }
+      //break;
+    default: return;
+      }
+      });
+      //vy = 0;
+      //function animateJump(){
+      //  jump = true;
+      //  player.y += vy;
+      //  vy *= .98;
+      //  console.log('test');
+      //  renderPlayer(player.x, player.y);
+      //  requestAnimationFrame(animateJump);
+      //}
+    function StartJump(){
+      if(onGround){
+        velocityY = -12.0;
+        onGround = false;
+      }
+    }
+    function EndJump(){
+      if(velocityY < -6.0){
+        velocityY = -6.0;
+      }
+    }
+
+
+
+
+
+    function Update(){
+          velocityY += gravity;
+          player.y += velocityY;
+          player.x += velocityX;
+
+        if(player.y > 175.0)
+        {
+          player.y = 175.0;
+          velocityY = 0.0;
+          onGround = true;
+        }
+
+        //if(player.x < 10 || player.x > 190)
+        //  velocityX *= -1;
+
+        }
+      function renderPlayer(x, y){
+        c.width = c.width;
+        ctx.fillStyle = "#ff0000";
+        ctx.fillRect(x, y, 35, 35);
+      }
+    function Render(){
+      c.width = c.width;
+      ctx.fillStyle = "#ff0000";
+      ctx.fillRect(player.x, player.y, 35, 35);
+    }
+  //function animatePlayers(){
+  //  var playerLength = players.length;
+  //  for(int i = 0; i < playerLength; i++){
+  //    animatePlayer(players[i]);
+  //  }
+  //}
+  function gameLoop(){
+    Update();
+    Render();
+    gameLoopID = requestAnimationFrame(gameLoop);
   }
-
-
 </script>
 <style type="text/css">
 
@@ -133,7 +193,7 @@
   </head>
   <body>
     <canvas id="canvas">
-      
+
     </canvas>
   </body>
 </html>
