@@ -11,6 +11,7 @@ function player(id, x, y){
   this.y = y;
 }
 var players = [];
+var numPlayers = 0;
 app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
@@ -18,11 +19,19 @@ app.all('*', function(req, res, next) {
  });
   console.log('sent3');
 app.get('/', function (req, res) {
-  
+
   console.log('sent2');
   res.sendfile(__dirname + '/index.html');
 });
+setInterval(sendPlayers, 200);
+function sendPlayers(){
+  if(numPlayers > 0){
+  io.sockets.emit('players', { data : players });
+  console.log('sendPlayers');
+  }
+}
 io.sockets.on('connection', function(socket){
+  numPlayers++;
   socket.emit('sessid', socket.id);
   console.log('sent');
   var p = new player(socket.id, 0, 0);
@@ -46,17 +55,17 @@ io.sockets.on('connection', function(socket){
           player.moveAmt = 10;
           players[i].x -= 10;
         } else if (data.move == "right"){
-          
+
           player.moveDir = "right";
           player.moveAmt = 10;
           players[i].x += 10;
         } else if (data.move == "up"){
-          
+
           player.moveDir = "up";
           player.moveAmt = 10;
           players[i].y -= 10;
         } else if (data.move == "down"){
-          
+
           player.moveDir = "down";
           player.moveAmt = 10;
           players[i].y += 10;
@@ -95,7 +104,7 @@ io.sockets.on('connection', function(socket){
         }
       }
     }
-    
+
   });
   socket.on('disconnect', function(){
     var length = players.length;

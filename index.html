@@ -6,7 +6,7 @@
   var gameLoopID;
   var latestPlayers = [];
   var players = [];
-  var player = new player(1, 35, 35);
+  var player = new player(1, 35, 35, 0, 0);
   var loopNum;
   var positionX = 100.0;
   var positionY = 175.0;
@@ -17,10 +17,29 @@
   var incInterval;
   var LeftKeyDown = false;
   var RightKeyDown = false;
+
+
+
+  var sessionid;
+  var socket = io.connect('http://localhost:3000');
+  socket.on('sessid', function(id){
+    sessionid = id;
+
+  });
+  socket.on('players', function (data) {
+    console.log(data);
+  });
+  socket.on('updatePlayers', function(data){
+      latestPlayers = data.data;
+      console.log(data.player)
+    });
+
   function player(id, x, y){
     this.id = id;
     this.x = x;
     this.y = y;
+    this.velocityX = velX;
+    this.velocityY = velY;
   }
   $(window).resize(function() {
     c.height = window.innerHeight -50;
@@ -70,31 +89,11 @@
           RightKeyDown = true;
           velocityX = 3;
           break;
-
-          //case 40:
-          //player.moveDir = "down";
-          //player.y += 5;
-          //break;
-
           default: return;
+          socket.emit('move', player : player);
   }
   e.preventDefault();
       });
-      function increaseVelocity(){
-        if(loopNum == 0){
-        incInterval = setInterval(increaseVelocity, 500);
-        }
-        if(loopNum <= 5 && loopNum != -1){
-        loopNum++;
-        velocityX--;
-
-      } else {
-        loopNum = -1;
-      }
-      if(loopNum == -1){
-        clearInterval(incInterval);
-      }
-      }
       $(document).keyup(function(e){
         switch(e.which){
         case 32:
@@ -168,9 +167,11 @@
         ctx.fillRect(x, y, 35, 35);
       }
     function Render(){
-      c.width = c.width;
       ctx.fillStyle = "#ff0000";
       ctx.fillRect(player.x, player.y, 35, 35);
+    }
+    function clearMap(){
+      c.width = c.width;
     }
   //function animatePlayers(){
   //  var playerLength = players.length;
@@ -179,7 +180,7 @@
   //  }
   //}
   function gameLoop(){
-    Update();
+    clearMap();
     Render();
     gameLoopID = requestAnimationFrame(gameLoop);
   }
@@ -188,6 +189,10 @@
 
   body {
     background-color: #dfdfdf;
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
   }
 </style>
   </head>
