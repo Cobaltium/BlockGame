@@ -4,11 +4,14 @@ var app = require('express')()
 server.listen(3000);
 var PLAYER_WIDTH = 30;
 var CANVAS_WIDTH = 1000;
-console.log('test');
+//console.log('test');
 function player(id, x, y){
   this.id = id;
   this.x = x;
   this.y = y;
+  this.color = "#000";
+  //this.velocityX = velX;
+  //this.velocityY = velY;
 }
 var players = [];
 var numPlayers = 0;
@@ -17,92 +20,61 @@ app.all('*', function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();
  });
-  console.log('sent3');
+  //console.log('sent3');
 app.get('/', function (req, res) {
 
-  console.log('sent2');
+  //console.log('sent2');
   res.sendfile(__dirname + '/index.html');
 });
-setInterval(sendPlayers, 20000);
+//setInterval(sendPlayers, 20000);
 function sendPlayers(){
   if(numPlayers > 0){
   io.sockets.emit('players', { data : players });
-  console.log('sendPlayers');
+  //console.log('sendPlayers    ');
+  //console.log(players);
+  //console.log();
   }
 }
 io.sockets.on('connection', function(socket){
   numPlayers++;
-  socket.emit('sessid', socket.id);
-  console.log('sent');
+  //console.log('sent');
   var p = new player(socket.id, 0, 0);
+  socket.emit('init', { player : p});
   players.push(p);
-  console.log(p);
-  console.log('login');
-  console.log(socket.id);
+  //console.log(p);
+  //console.log('login');
+  //console.log(socket.id);
   socket.on('event', function(data){
     console.log(data);
   });
-  socket.on('move', function(player, moveDir){
-  console.log(socket.id);
-    console.log(moveDir);
-    var length = players.length
-    for(var i = 0; i < length; i++){
-      if(socket.id && players[i]){
-      if(player.id == players[i].id){
-        player = players[i];
-        if(moveDir == "l"){
-          
-          players[i].x -= 10;
-        } else if (moveDir == "r"){
 
-          players[i].x += 10;
-        }
-          io.sockets.emit('updatePlayers', { data : players, player : player});
-          player.moveAmt = 0;
-          player.moveDir = "";
-//        console.log(players[i]);
-//        if(data.move == "left"){
-//          if(velX < 2){
-//            velX++;
-//          }
-//          players[i].x += -10;
-//        if(checkCollision(players[i])){
-//          players[i].x += 10;
-//
-//          }
-//        } else if (data.move == "right"){
-//          players[i].x += 10;
-//        if(checkCollision(players[i])){
-//          players[i].x += -10;
-//
-//          }
-//        } else if (data.move == "down"){
-//          players[i].y += 10;
-//        if(checkCollision(players[i])){
-//          players[i].y += -10;
-//
-//          }
-//        } else if (data.move == "up"){
-//          players[i].y += -10;
-//          if(checkCollision(players[i])){
-//          players[i].y += 10;
-//          }
-//          }
-        }
-      }
-    }
-
-  });
   socket.on('disconnect', function(){
     var length = players.length;
       for(var i = 0; i < length; i++){
       if(socket.id && players[i]){
       if(socket.id == players[i].id){
          players.splice(i, 1);
+         emitPlayers();
       }
     }
     }
-    });
+  });
+  socket.on('updatePlayer', function(data){
+    var length = players.length;
+    for(var i = 0; i < length; i++){
+      //console.log(data.player.id);
+      //console.log(players[i].id);
+      if(data.player.id == players[i].id){
+        players[i] = data.player;
+        //console.log('updatePlayer');
+        emitPlayers();
+      }
+    }
+  });
+  });
+  function emitPlayers(){
+    io.sockets.emit('players', { data : players});
+  }
   function checkCollision(player){
     var length = players.length;
     for(var i = 0; i < length; i++){
@@ -116,4 +88,3 @@ io.sockets.on('connection', function(socket){
 
     }
   }
-});

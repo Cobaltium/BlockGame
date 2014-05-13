@@ -6,7 +6,7 @@
   var gameLoopID;
   var latestPlayers = [];
   var players = [];
-  var player = new player(1, 35, 35, 0, 0);
+  var player;
   var loopNum;
   var positionX = 100.0;
   var positionY = 175.0;
@@ -21,23 +21,25 @@
 
 
   var sessionid;
-  var socket = io.connect('http://pleblvl.com:3000');
+  var socket = io.connect('http://localhost:3000');
+
+
+  socket.on('init', function(data){
+    player = new Player(data.player.id, data.player.x, data.player.y);
+    gameLoop();
+  })
   socket.on('sessid', function(id){
     sessionid = id;
-
   });
   socket.on('players', function (data) {
-    console.log(data);
+    players = data.data;
   });
-  socket.on('updatePlayers', function(data){
-      latestPlayers = data.data;
-      console.log(data.player)
-    });
 
-  function player(id, x, y){
+  function Player(id, x, y){
     this.id = id;
     this.x = x;
     this.y = y;
+    this.color = "#000";
     //this.velocityX = velX;
     //this.velocityY = velY;
   }
@@ -50,18 +52,15 @@
     ctx = canvas.getContext('2d');
     c.height = window.innerHeight -50;
     c.width = window.innerWidth -50;
-    player.x = 35;
-    player.y = 35;
-    gameLoop();
   });
   $(document).keydown(function(e) {
     var dir;
 
-    switch(e.which){
+      switch(e.which){
           case 37:
           dir = "l";
           LeftKeyDown = true;
-          //velocityX = -3;
+          velocityX = -3;
           //clearInterval(incInterval);
           //increaseVelocity();
           break;
@@ -71,7 +70,6 @@
             } else if (RightKeyDown){
               velocityX = 6;
             }
-          //velocityX = 3;
           break;
 
           case 32:
@@ -83,13 +81,15 @@
           dir = "r";
           //player.x += 5;
           RightKeyDown = true;
+        velocityX = 3;
           break;
           default: return;
-          socket.emit('move', {player : player, moveDir : dir});
-  }
+        }
+  socket.emit('move', {player : player, moveDir : dir});
   e.preventDefault();
       });
       $(document).keyup(function(e){
+        var dir;
         switch(e.which){
         case 32:
           EndJump();
@@ -99,11 +99,13 @@
         loopNum = -1;
         LeftKeyDown = false;
         //clearInterval(incInterval);
+        dir = "l";
         velocityX = 0;
         break;
     case 39:
       velocityX = 0;
       RightKeyDown = false;
+      dir = "r";
       break;
       case 16:
         if(LeftKeyDown){
@@ -114,6 +116,7 @@
       //break;
     default: return;
       }
+      socket.emit('stopMove', { player : player, moveDir : dir});
       });
       //vy = 0;
       //function animateJump(){
@@ -144,7 +147,9 @@
           velocityY += gravity;
           player.y += velocityY;
           player.x += velocityX;
-
+        if(velocityX != 0 || velocityY != 0){
+          socket.emit('updatePlayer', { player : player});
+        }
         if(player.y > 175.0)
         {
           player.y = 175.0;
@@ -156,14 +161,19 @@
         //  velocityX *= -1;
 
         }
-      function renderPlayer(x, y){
-        c.width = c.width;
-        ctx.fillStyle = "#ff0000";
-        ctx.fillRect(x, y, 35, 35);
-      }
-    function Render(){
+    function Render(player){
       ctx.fillStyle = "#ff0000";
       ctx.fillRect(player.x, player.y, 35, 35);
+    }
+    function RenderOthers(){
+      if(players != null){
+      var length = players.length;
+      for(var i = 0; i < length; i++){
+        if(player.id != players[i].id){
+          Render(players[i]);
+        }
+      }
+    }
     }
     function clearMap(){
       c.width = c.width;
@@ -175,9 +185,10 @@
   //  }
   //}
   function gameLoop(){
-
+    Update();
     clearMap();
-    Render();
+    Render(player);
+    RenderOthers();
     gameLoopID = requestAnimationFrame(gameLoop);
   }
 </script>
