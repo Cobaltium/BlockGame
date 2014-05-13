@@ -90,7 +90,7 @@
           velocityX = 3;
           break;
           default: return;
-          socket.emit('move', {player : player});
+          socket.emit('move', {data : player});
   }
   e.preventDefault();
       });
