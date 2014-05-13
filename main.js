@@ -23,7 +23,7 @@ app.get('/', function (req, res) {
   console.log('sent2');
   res.sendfile(__dirname + '/index.html');
 });
-setInterval(sendPlayers, 200);
+setInterval(sendPlayers, 20000);
 function sendPlayers(){
   if(numPlayers > 0){
   io.sockets.emit('players', { data : players });
@@ -42,33 +42,20 @@ io.sockets.on('connection', function(socket){
   socket.on('event', function(data){
     console.log(data);
   });
-  socket.on('move', function(data){
+  socket.on('move', function(player, moveDir){
   console.log(socket.id);
-    console.log('move');
+    console.log(moveDir);
     var length = players.length
     for(var i = 0; i < length; i++){
       if(socket.id && players[i]){
-      if(socket.id == players[i].id){
+      if(player.id == players[i].id){
         player = players[i];
-        if(data.move == "left"){
-          player.moveDir = "left";
-          player.moveAmt = 10;
+        if(moveDir == "l"){
+          
           players[i].x -= 10;
-        } else if (data.move == "right"){
+        } else if (moveDir == "r"){
 
-          player.moveDir = "right";
-          player.moveAmt = 10;
           players[i].x += 10;
-        } else if (data.move == "up"){
-
-          player.moveDir = "up";
-          player.moveAmt = 10;
-          players[i].y -= 10;
-        } else if (data.move == "down"){
-
-          player.moveDir = "down";
-          player.moveAmt = 10;
-          players[i].y += 10;
         }
           io.sockets.emit('updatePlayers', { data : players, player : player});
           player.moveAmt = 0;

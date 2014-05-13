@@ -55,16 +55,13 @@
     gameLoop();
   });
   $(document).keydown(function(e) {
-    var whichKey;
+    var dir;
 
     switch(e.which){
           case 37:
-
-          player.moveDir = "left";
-          //player.x += -5;
-          velocityX = -3;
-          loopNum = 0;
+          dir = "l";
           LeftKeyDown = true;
+          //velocityX = -3;
           //clearInterval(incInterval);
           //increaseVelocity();
           break;
@@ -83,14 +80,12 @@
           break;
 
           case 39:
-          player.moveDir = "right";
+          dir = "r";
           //player.x += 5;
-
           RightKeyDown = true;
-          velocityX = 3;
           break;
           default: return;
-          socket.emit('move', {data : player});
+          socket.emit('move', {player : player, moveDir : dir});
   }
   e.preventDefault();
       });
@@ -180,6 +175,7 @@
   //  }
   //}
   function gameLoop(){
+
     clearMap();
     Render();
     gameLoopID = requestAnimationFrame(gameLoop);
