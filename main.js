@@ -71,6 +71,9 @@ io.sockets.on('connection', function(socket){
       }
     }
   });
+  socket.on('playerStartMove', function(data){
+    
+  });
   });
   function emitPlayers(){
     io.sockets.emit('players', { data : players});

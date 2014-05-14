@@ -1,0 +1,29 @@
+{
+  "name": "BlockGame",
+  "version": "0.0.0",
+  "description": "Small multiplayer game using nodejs and socket.io",
+  "main": "main.js",
+  "dependencies": {
+    "body-parser": "^1.0.2",
+    "mysql": "^2.2.0",
+    "socket.io": "^1.0.0-pre2",
+    "express": "^4.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cobaltium/BlockGame.git"
+  },
+  "keywords": [
+    "game"
+  ],
+  "author": "Matthew Ferderber",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Cobaltium/BlockGame/issues"
+  },
+  "homepage": "https://github.com/Cobaltium/BlockGame"
+}
