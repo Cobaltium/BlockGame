@@ -19,9 +19,8 @@
   var RightKeyDown = false;
 
 
-
   var sessionid;
-  var socket = io.connect('http://pleblvl.com:3000');
+  var socket = io.connect('http://localhost:3000');
 
 
   socket.on('init', function(data){
@@ -32,7 +31,9 @@
     sessionid = id;
   });
   socket.on('players', function (data) {
+    if(data.data.length > 0){
     players = data.data;
+  }
   });
 
   function Player(id, x, y){
@@ -53,10 +54,10 @@
     c.height = window.innerHeight -50;
     c.width = window.innerWidth -50;
   });
-  $(document).keydown(function(e) {
+  document.onkeydown = function(e) {
     var dir;
 
-      switch(e.which){
+      switch(e.keyCode){
           case 37:
           dir = "l";
           LeftKeyDown = true;
@@ -85,12 +86,14 @@
           break;
           default: return;
         }
-  socket.emit('move', {player : player, moveDir : dir});
+  if(LeftKeyDown || RightKeyDown){
+    socket.emit('playerMove', {player : player, moveDir : dir});
+  }
   e.preventDefault();
-      });
-      $(document).keyup(function(e){
+      };
+      document.onkeyup = function(e){
         var dir;
-        switch(e.which){
+        switch(e.keyCode){
         case 32:
           EndJump();
         break;
@@ -115,11 +118,11 @@
         } else if (RightKeyDown){
           velocityX = 3;
         }
-      //break;
+      break;
     default: return;
       }
       socket.emit('stopMove', { player : player, moveDir : dir});
-      });
+      }
       //vy = 0;
       //function animateJump(){
       //  jump = true;
@@ -171,12 +174,11 @@
       if(players != null){
       var length = players.length;
       for(var i = 0; i < length; i++){
-        if(player.id != players[i].id){
+        //if(player.id != players[i].id){
           Render(players[i]);
-        }
       }
     }
-    }
+  }
     function clearMap(){
       c.width = c.width;
     }
@@ -187,9 +189,9 @@
   //  }
   //}
   function gameLoop(){
-    Update();
+    //Update();
     clearMap();
-    Render(player);
+    //Render(player);
     RenderOthers();
     gameLoopID = requestAnimationFrame(gameLoop);
   }

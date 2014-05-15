@@ -4,15 +4,17 @@ var app = require('express')()
 server.listen(3000);
 var PLAYER_WIDTH = 30;
 var CANVAS_WIDTH = 1000;
+var gravity = 0.5;
 //console.log('test');
 function player(id, x, y){
   this.id = id;
   this.x = x;
   this.y = y;
   this.color = "#000";
-  //this.velocityX = velX;
-  //this.velocityY = velY;
+  this.velX = 0;
+  this.velY = 0;
 }
+var clientPlayers = [];
 var players = [];
 var numPlayers = 0;
 app.all('*', function(req, res, next) {
@@ -40,10 +42,12 @@ io.sockets.on('connection', function(socket){
   //console.log('sent');
   var p = new player(socket.id, 0, 0);
   socket.emit('init', { player : p});
+  p.velY = 2;
   players.push(p);
   //console.log(p);
   //console.log('login');
   //console.log(socket.id);
+  setInterval(movePlayers, 20);
   socket.on('event', function(data){
     console.log(data);
   });
@@ -71,12 +75,74 @@ io.sockets.on('connection', function(socket){
       }
     }
   });
-  socket.on('playerStartMove', function(data){
-    
+  socket.on('playerMove', function(data){
+    var i;
+    if(data.moveDir == "r"){
+      i = getPlayerIndex(data.player.id);
+      players[i].velX = 3;
+      console.log(players[i]);
+  } else if(data.moveDir == "l"){
+    i = getPlayerIndex(data.player.id);
+    players[i].velX = -3;
+    console.log(players[i]);
+  }
   });
+  socket.on('stopMove', function(data){
+    var i;
+    console.log('stopMove');
+    if(data.moveDir == "r"){
+      i = getPlayerIndex(data.player.id);
+      if(i != false){
+        players[i].velX = 0;
+        console.log(players[i]);
+      }
+    } else if(data.moveDir == "l"){
+      i = getPlayerIndex(data.player.id);
+      if(i != false){
+        players[i].velX = 0;
+      }
+    }
   });
+});
+  function movePlayers(){
+    clientPlayers = [];
+    var length = players.length;
+    for(var i = 0; i < length; i++){
+        players[i].velY += gravity;
+        players[i].x += players[i].velX;
+        players[i].y += players[i].velY;
+
+        if(players[i].y > 175.0)
+        {
+          players[i].y = 175.0;
+          players[i].velY = 0;
+        }
+        clientPlayers.push(new player(players[i].id, players[i].x, players[i].y));
+    }
+    emitPlayers();
+  }
+  function getPlayerIndex(id){
+    var length = players.length;
+    for(var i = 0; i < length; i++){
+      if(players[i].id == id){
+        return i;
+      }
+    }
+    return false;
+  }
+  function replacePlayer(player){
+    var length = players.length;
+    for(var i = 0; i < length; i++){
+      if(players[i].id == player.id){
+        players[i] = player;
+        return true;
+      }
+
+    }
+    return false;
+  }
   function emitPlayers(){
-    io.sockets.emit('players', { data : players});
+    io.sockets.emit('players', { data : clientPlayers});
   }
   function checkCollision(player){
     var length = players.length;
